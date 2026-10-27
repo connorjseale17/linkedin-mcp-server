@@ -1112,9 +1112,9 @@ TOOL_FACADE_METHODS = {
     "search_jobs",
     "search_people",
     "search_posts",
-    "send_message",
 }
-COMPATIBILITY_METHODS = {"get_page_text", "click_button_by_text"}
+# send_message has no MCP tool in this fork; the facade method stays for its traces.
+COMPATIBILITY_METHODS = {"get_page_text", "click_button_by_text", "send_message"}
 
 
 async def build_policy_traces() -> dict[str, dict[str, Any]]:

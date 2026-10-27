@@ -159,18 +159,14 @@ async def test_tool_schema_trace_keeps_people_boundary_coercion_and_inventory():
         "tool_schemas"
     ]
 
-    assert len(schemas) == 20
+    assert len(schemas) == 19
     network = schemas["search_people"]["input"]["properties"]["network"]
     assert network["anyOf"] == [
         {"items": {"type": "string"}, "type": "array"},
         {"type": "null"},
     ]
     assert 'comma-separated string ("F,S") is also' in network["description"]
-    assert schemas["send_message"]["input"]["required"] == [
-        "linkedin_username",
-        "message",
-        "confirm_send",
-    ]
+    assert "send_message" not in schemas
 
 
 async def test_facade_results_keep_raw_values_and_optional_key_shape():

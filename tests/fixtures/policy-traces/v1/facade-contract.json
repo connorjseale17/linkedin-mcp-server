@@ -9,7 +9,8 @@
   "result": {
     "compatibility_methods": [
       "click_button_by_text",
-      "get_page_text"
+      "get_page_text",
+      "send_message"
     ],
     "methods": {
       "click_button_by_text": {
@@ -115,8 +116,7 @@
       "search_conversations",
       "search_jobs",
       "search_people",
-      "search_posts",
-      "send_message"
+      "search_posts"
     ],
     "tool_schemas": {
       "close_session": {
@@ -742,47 +742,6 @@
           },
           "required": [
             "keywords"
-          ],
-          "type": "object"
-        },
-        "output": {
-          "additionalProperties": true,
-          "type": "object"
-        }
-      },
-      "send_message": {
-        "input": {
-          "additionalProperties": false,
-          "properties": {
-            "confirm_send": {
-              "description": "Must be True to send the message",
-              "type": "boolean"
-            },
-            "linkedin_username": {
-              "description": "LinkedIn username of the recipient; a full profile URL is accepted too",
-              "type": "string"
-            },
-            "message": {
-              "description": "Message text. LF, CRLF and CR all end a line; an empty line\nseparates paragraphs and is kept. Whitespace-only lines count as\nempty, and leading and trailing whitespace of the whole message\nis removed, as LinkedIn does when sending. Tab, other control\ncharacters, DEL, U+0085, U+2028 and U+2029 are refused.",
-              "type": "string"
-            },
-            "profile_urn": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Optional profile URN (e.g. ACoAAB...) to verify against\nthe URN exposed by the loaded profile before opening its Message\naction. It never bypasses recipient verification. Obtain via\nget_person_profile. Note: inbox may not always show all messages;\nuse search_conversations as a fallback."
-            }
-          },
-          "required": [
-            "linkedin_username",
-            "message",
-            "confirm_send"
           ],
           "type": "object"
         },

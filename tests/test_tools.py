@@ -10,7 +10,6 @@ from fastmcp.tools import FunctionTool
 from linkedin_mcp_server.callbacks import MCPContextProgressCallback
 from linkedin_mcp_server.linkedin.contracts import (
     RATE_LIMITED_SECTION_TEXT,
-    SEND_INTERRUPTED_WARNING,
 )
 from linkedin_mcp_server.linkedin.contracts import ExtractedSection
 
