@@ -18,9 +18,9 @@ work, health checks, or background maintenance.
 - Never enable the plugin or its MCP server, edit the host's plugin configuration,
   or start a login flow merely because LinkedIn might be useful. If either
   component is disabled, explain that state and stop.
-- `send_message` and `connect_with_person` are write actions. Use them only when
-  the user explicitly authorizes the exact recipient and action. Confirm the
-  final message or connection note unless the user has already supplied it.
+- `connect_with_person` is a write action (this fork removes `send_message`). Use
+  it only when the user explicitly authorizes the exact recipient and action.
+  Confirm the connection note unless the user has already supplied it.
 - Do not retry a failed write action unless the result proves it was not sent.
 
 ## Browser and authentication
@@ -45,8 +45,8 @@ instances, clear profiles, or replace the user's browser session.
   `get_job_apply_url`.
 - Content: `get_feed` and `search_posts`.
 - Messages: `get_inbox`, `get_conversation`, and `search_conversations`.
-- Writes: `send_message` and `connect_with_person`, subject to the explicit
-  authorization rules above.
+- Writes: `connect_with_person` only, subject to the explicit authorization
+  rules above.
 - Cleanup: use `close_session` only when the user asks to end the managed
   browser session or when the current LinkedIn task is finished and no follow-up
   call is expected.

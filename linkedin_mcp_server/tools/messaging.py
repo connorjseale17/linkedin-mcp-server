@@ -1,7 +1,9 @@
 """
 LinkedIn messaging tools.
 
-Provides inbox listing, conversation reading, message search, and sending.
+Provides inbox listing, conversation reading, and message search.
+
+This fork is read-only for messaging: the send_message tool is removed.
 """
 
 import logging
@@ -15,14 +17,8 @@ from linkedin_mcp_server.core.exceptions import (
     InvalidReferenceError,
 )
 from linkedin_mcp_server.dependencies import get_ready_extractor, tool_errors
-from linkedin_mcp_server.linkedin.contracts import (
-    SEND_INTERRUPTED_WARNING,
-    before_the_reply_deadline,
-    refuse_an_invalid_message,
-)
 from linkedin_mcp_server.linkedin.identifiers import (
     normalize_person_identifier,
-    normalize_profile_urn,
     normalize_thread_id,
 )
 
@@ -204,123 +200,5 @@ def register_messaging_tools(
         result = await extractor.search_conversations(keywords, limit=limit)
 
         await ctx.report_progress(progress=100, total=100, message="Complete")
-
-        return result
-
-    @mcp.tool(
-        timeout=tool_timeout,
-        title="Send Message",
-        annotations={"destructiveHint": True, "openWorldHint": True},
-        tags={"messaging", "actions"},
-    )
-    @tool_errors
-    async def send_message(
-        linkedin_username: str,
-        message: str,
-        confirm_send: bool,
-        ctx: Context,
-        profile_urn: str | None = None,
-    ) -> dict[str, Any]:
-        """
-        Compose and send a new message to a LinkedIn user.
-
-        Profile-based targeting opens LinkedIn's compose flow. It is not a safe
-        reply path for an existing recruiter/InMail or messaging thread: it may
-        create a separate DM even after you inspect that thread with
-        get_conversation or search_conversations. Those tools only read an
-        existing thread; they do not send a reply. Until a thread-targeted send
-        path is available, do not treat profile-based send_message as a reply.
-
-        The recipient must be directly messageable from the profile page. If
-        LinkedIn does not expose a normal Message action, use connect_with_person
-        first, then retry send_message only after the connection request is
-        accepted. A ``status`` of ``enter_to_send_enabled`` means the account
-        has LinkedIn's "Press Enter to Send" preference on, which hides the Send
-        button; relay the returned instructions to the user, who switches it to
-        "Click Send to send" before retrying. The dry run (confirm_send False)
-        reports it too. Recipient authorization comes from validating one
-        recipient-specific Message action carrying the target URN, then following
-        its browser navigation and pinning the exact final route. Visible profile
-        links or recipient URNs in the composer are optional corroboration; any
-        contradiction fails closed. No Voyager or other private API is used. This
-        is a write operation when confirm_send is True.
-
-        ``thread_id`` is present only on ``sent``: the conversation the
-        confirmed message was observed in, or null when the page stayed on
-        the compose route. ``retry_safe`` stays the authority for whether a
-        retry is safe.
-
-        Args:
-            linkedin_username: LinkedIn username of the recipient; a full profile URL is accepted too
-            message: Message text. LF, CRLF and CR all end a line; an empty line
-                separates paragraphs and is kept. Whitespace-only lines count as
-                empty, and leading and trailing whitespace of the whole message
-                is removed, as LinkedIn does when sending. Tab, other control
-                characters, DEL, U+0085, U+2028 and U+2029 are refused.
-            confirm_send: Must be True to send the message
-            ctx: FastMCP context for progress reporting
-            profile_urn: Optional profile URN (e.g. ACoAAB...) to verify against
-                the URN exposed by the loaded profile before opening its Message
-                action. It never bypasses recipient verification. Obtain via
-                get_person_profile. Note: inbox may not always show all messages;
-                use search_conversations as a fallback.
-
-        Returns:
-            Dict with url, status, message, recipient_selected, sent, and
-            retry_safe. ``thread_id`` is present only on ``sent``. ``sent``
-            is true only after the thread shows the submitted
-            text under a new server message ID (or its DOM node gains a
-            different event ID); this does not claim delivery or read status.
-            It is false both where nothing was submitted and
-            where the outcome is unknown. ``retry_safe`` separates the two: it
-            is false from the moment a submission is attempted, and calling
-            again while it is
-            false can deliver the message twice. A ``status`` of
-            ``outcome_unknown`` is that same warning from the transport rather
-            than the page: the call's answer never arrived from the browser
-            process, so ``sent`` is absent instead of false and only LinkedIn
-            itself can say whether the message left.
-        """
-        # Answered before a session is acquired. Caller-owned message
-        # validation needs no browser, and acquiring one can spend a login
-        # attempt and come back as an authentication error instead of the
-        # refusal the caller can act on.
-        refusal = refuse_an_invalid_message(linkedin_username, message)
-        if refusal is not None:
-            return refusal
-        linkedin_username = normalize_person_identifier(linkedin_username)
-        if profile_urn is not None:
-            profile_urn = normalize_profile_urn(profile_urn)
-        extractor = await get_ready_extractor(ctx, tool_name="send_message")
-        logger.info(
-            "Sending message to %s (confirm_send=%s)",
-            linkedin_username,
-            confirm_send,
-        )
-
-        await ctx.report_progress(progress=0, total=100, message="Sending message")
-
-        result = await extractor.send_message(
-            linkedin_username,
-            message,
-            confirm_send=confirm_send,
-            profile_urn=profile_urn,
-        )
-
-        try:
-            # The send has already answered, and this notification is the
-            # last await inside FastMCP's `anyio.fail_after()`. A deadline
-            # landing here would discard a result that may say the send was
-            # confirmed, so a notification that stalls gives up first.
-            with before_the_reply_deadline():
-                await ctx.report_progress(progress=100, total=100, message="Complete")
-        except BaseException:
-            # Cancellation from outside, such as a client that cancels,
-            # which nothing can answer, so the log line is all that is
-            # left. Quiet where the result says a retry is safe, because
-            # then there is nothing to warn about.
-            if result.get("retry_safe") is False:
-                logger.warning(SEND_INTERRUPTED_WARNING)
-            raise
 
         return result

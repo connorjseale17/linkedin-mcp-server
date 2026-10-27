@@ -112,10 +112,6 @@
       "description": "Search LinkedIn messages by keyword"
     },
     {
-      "name": "send_message",
-      "description": "Compose and send a new message, line breaks and empty lines included, without tab or other control characters to a LinkedIn user with explicit confirmation and optional profile URN support; profile-based targeting may create a separate DM instead of replying in an existing thread, and when no normal Message action is exposed, use connect_with_person and retry after acceptance"
-    },
-    {
       "name": "get_feed",
       "description": "Get recent posts from the authenticated user's LinkedIn home feed"
     },
